@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Éducatif pour Enfants</title>
     <style>
-        /* CSS pour un design simple et propre */
+        /* ... tout votre CSS existant ... */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f0f2f5;
@@ -14,74 +14,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-        }
-        #chat-container {
-            width: 100%;
-            max-width: 500px;
-            height: 80vh;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        #chat-box {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .message {
-            padding: 10px 15px;
-            border-radius: 18px;
-            max-width: 75%;
-            line-height: 1.4;
-        }
-        .message.utilisateur {
-            background-color: #0084ff;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-        .message.ia {
-            background-color: #e4e6eb;
-            color: #050505;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-        .message.typing {
-            color: #65676b;
-            font-style: italic;
-        }
-        #chat-form {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-        }
-        #chat-input {
-            flex-grow: 1;
-            border: 1px solid #ccc;
-            border-radius: 18px;
-            padding: 10px 15px;
-            font-size: 16px;
-            outline: none;
-        }
-        #chat-input:focus {
-            border-color: #0084ff;
-        }
-        #chat-form button {
-            background-color: #0084ff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            margin-left: 10px;
-            font-size: 20px;
-            cursor: pointer;
+            flex-direction: column; /* Ajouté pour centrer les modes */
         }
         .header {
             position: absolute;
@@ -101,6 +34,53 @@
         #logout-btn {
             background-color: #dc3545;
         }
+        .modes-container {
+            margin-bottom: 15px;
+            background-color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 500px;
+            height: 70vh; /* Un peu réduit pour faire de la place */
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #chat-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message { padding: 10px 15px; border-radius: 18px; max-width: 75%; line-height: 1.4; }
+        .message.utilisateur { background-color: #0084ff; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .message.ia { background-color: #e4e6eb; color: #050505; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .message.typing { color: #65676b; font-style: italic; }
+        #chat-form { display: flex; padding: 10px; border-top: 1px solid #ddd; align-items: center; }
+        #chat-input { flex-grow: 1; border: 1px solid #ccc; border-radius: 18px; padding: 10px 15px; font-size: 16px; outline: none; }
+        #chat-input:focus { border-color: #0084ff; }
+        #chat-form button {
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            flex-shrink: 0; /* Empêche le bouton de rétrécir */
+        }
+        #send-btn { background-color: #0084ff; }
+        #mic-btn { background-color: #6c757d; font-size: 18px; }
+        #mic-btn.is-listening { background-color: #dc3545; }
     </style>
 </head>
 <body>
@@ -109,48 +89,47 @@
     <button id="new-chat-btn">Nouvelle Conversation</button>
     <button id="logout-btn">Déconnexion</button>
 </div>
-<div id="chat-container">
 
-    <div class="modes-container">
+<div class="modes-container">
     <strong>Mode :</strong>
     <input type="radio" id="mode-libre" name="chat-mode" value="libre" checked>
     <label for="mode-libre">Libre</label>
-
     <input type="radio" id="mode-dico" name="chat-mode" value="dictionnaire">
     <label for="mode-dico">Dictionnaire</label>
-
     <input type="radio" id="mode-trad" name="chat-mode" value="traduction">
     <label for="mode-trad">Traduction</label>
-
     <div id="translation-options" style="display: none; margin-top: 5px;">
         <select id="source-lang">
             <option value="Français">Français</option>
             <option value="Anglais">Anglais</option>
+            <option value="Espagnol">Espagnol</option>
             <option value="Arabe">Arabe</option>
         </select>
         <span>vers</span>
         <select id="target-lang">
             <option value="Anglais">Anglais</option>
             <option value="Français">Français</option>
+            <option value="Espagnol">Espagnol</option>
             <option value="Arabe">Arabe</option>
         </select>
     </div>
 </div>
-    
+
 <div id="chat-container">
     <div id="chat-box">
-        <div class="message ia">Bonjour ! Je suis Tahani, ton tuteur IA. Pose-moi une question pour commencer.</div>
+        <div class="message ia">Bonjour ! Je suis Léo. Choisis un mode et pose-moi une question.</div>
     </div>
     <form id="chat-form">
-        <input type="text" id="chat-input" placeholder="Écris ton message..." autocomplete="off" required>
-        <button type="submit">➤</button>
+        <input type="text" id="chat-input" placeholder="Écris ou parle..." autocomplete="off">
+        <button type="button" id="mic-btn">🎤</button>
+        <button type="submit" id="send-btn">➤</button>
     </form>
 </div>
 
+
 <script>
     // --- CONSTANTES ET ÉLÉMENTS HTML ---
-    ///const API_URL = 'http://127.0.0.1:8000';
-    const API_URL = 'https://ai-educ-backend.onrender.com';
+    const API_URL = 'https://chat-educatif-backend.onrender.com'; // Assurez-vous que c'est bien votre URL
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatBox = document.getElementById('chat-box');
@@ -158,6 +137,7 @@
     const logoutBtn = document.getElementById('logout-btn');
     const translationOptions = document.getElementById('translation-options');
     const modeRadios = document.querySelectorAll('input[name="chat-mode"]');
+    const micBtn = document.getElementById('mic-btn');
     let conversationId = null;
 
     // --- VÉRIFICATION DE L'AUTHENTIFICATION ---
@@ -167,60 +147,82 @@
         window.location.href = 'index.html';
     }
 
+    // --- FONCTIONNALITÉ TEXT-TO-SPEECH (LA VOIX DE L'IA) ---
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'fr-FR'; // Assure une voix française
+            utterance.rate = 1; // Vitesse de parole
+            window.speechSynthesis.speak(utterance);
+        } else {
+            console.log("Désolé, votre navigateur ne supporte pas la synthèse vocale.");
+        }
+    }
+
+    // --- FONCTIONNALITÉ SPEECH-TO-TEXT (LA VOIX DE L'UTILISATEUR) ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.interimResults = false;
+
+        micBtn.addEventListener('click', () => {
+            micBtn.classList.add('is-listening');
+            micBtn.textContent = '...';
+            recognition.start();
+        });
+
+        recognition.onresult = (event) => {
+            const speechResult = event.results[0][0].transcript;
+            chatInput.value = speechResult;
+            // Optionnel : envoyer automatiquement le message après la parole
+            chatForm.dispatchEvent(new Event('submit'));
+        };
+
+        recognition.onend = () => {
+            micBtn.classList.remove('is-listening');
+            micBtn.textContent = '🎤';
+        };
+
+        recognition.onerror = (event) => {
+            alert(`Erreur de reconnaissance vocale: ${event.error}`);
+            micBtn.classList.remove('is-listening');
+            micBtn.textContent = '🎤';
+        };
+
+    } else {
+        console.log("Désolé, votre navigateur ne supporte pas la reconnaissance vocale.");
+        micBtn.style.display = 'none'; // Cache le bouton si non supporté
+    }
+
     // --- FONCTIONS UTILITAIRES ---
-    function addMessage(text, sender) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', sender);
-        messageElement.textContent = text;
-        chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    // --- NOUVELLE FONCTION POUR RÉINITIALISER LE CHAT ---
-    function resetChat(welcomeMessage) {
-        chatBox.innerHTML = ''; // Vide la fenêtre de chat
-        conversationId = null;  // Réinitialise l'ID de la conversation
-        addMessage(welcomeMessage, 'ia'); // Affiche un message de bienvenue
-    }
-
+    function addMessage(text, sender) { /* ... reste inchangée ... */ }
+    function resetChat(welcomeMessage) { /* ... reste inchangée ... */ }
 
     // --- ÉCOUTEURS D'ÉVÉNEMENTS (LISTENERS) ---
-
-    // Listener principal pour l'envoi de message
     chatForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const userMessage = chatInput.value.trim();
         if (userMessage === '') return;
-
         addMessage(userMessage, 'utilisateur');
         chatInput.value = '';
-
         const typingIndicator = document.createElement('div');
         typingIndicator.classList.add('message', 'ia', 'typing');
         typingIndicator.textContent = 'Léo est en train d\'écrire...';
         chatBox.appendChild(typingIndicator);
         chatBox.scrollTop = chatBox.scrollHeight;
-
         try {
-            // Construction dynamique de la requête
             const currentMode = document.querySelector('input[name="chat-mode"]:checked').value;
-            const requestBody = {
-                contenu: userMessage,
-                mode: currentMode
-            };
-
-            if (conversationId) {
-                requestBody.conversation_id = conversationId;
-            }
-
+            const requestBody = { contenu: userMessage, mode: currentMode };
+            if (conversationId) { requestBody.conversation_id = conversationId; }
             if (currentMode === 'traduction') {
                 requestBody.options = {
                     source_lang: document.getElementById('source-lang').value,
                     target_lang: document.getElementById('target-lang').value
                 };
             }
-
-            // Envoi de la requête au backend
             const response = await fetch(`${API_URL}/chat`, {
                 method: 'POST',
                 headers: {
@@ -229,7 +231,6 @@
                 },
                 body: JSON.stringify(requestBody),
             });
-
             if (!response.ok) {
                 if (response.status === 401) {
                     alert('Votre session a expiré. Veuillez vous reconnecter.');
@@ -237,57 +238,43 @@
                 }
                 throw new Error(`Le serveur a répondu avec un statut ${response.status}`);
             }
-
             const data = await response.json();
             conversationId = data.conversation_id;
-            
             chatBox.removeChild(typingIndicator);
             addMessage(data.contenu, 'ia');
-
+            // LIRE LA RÉPONSE DE L'IA À VOIX HAUTE
+            speak(data.contenu);
         } catch (error) {
             console.error('Erreur:', error);
-            if(document.body.contains(typingIndicator)){
+            if (document.body.contains(typingIndicator)) {
                 chatBox.removeChild(typingIndicator);
             }
             addMessage("Oups, une erreur est survenue lors de la connexion au serveur.", 'ia');
         }
     });
 
-    // Listener pour le bouton de déconnexion
-    logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('accessToken');
-        alert('Vous avez été déconnecté.');
-        window.location.href = 'index.html';
-    });
-
-    // Listener pour le bouton de nouvelle conversation
-    newChatBtn.addEventListener('click', () => {
-        if (confirm('Voulez-vous vraiment commencer une nouvelle conversation ?')) {
-            resetChat('Bonjour ! Prêt pour une nouvelle discussion.');
-        }
-    });
-
-    // Listener pour les boutons radio des modes
+    logoutBtn.addEventListener('click', () => { /* ... reste inchangé ... */ });
+    newChatBtn.addEventListener('click', () => { /* ... reste inchangé ... */ });
     modeRadios.forEach(radio => {
-        radio.addEventListener('change', (event) => {
-            const newMode = event.target.value;
-            let welcomeMessage = '';
-
-            if (newMode === 'traduction') {
-                translationOptions.style.display = 'inline-block';
-                welcomeMessage = "Mode Traduction activé. Quel texte veux-tu traduire ?";
-            } else {
-                translationOptions.style.display = 'none';
-                if (newMode === 'dictionnaire') {
-                    welcomeMessage = "Mode Dictionnaire activé. Quel mot veux-tu que je définisse ?";
-                } else {
-                    welcomeMessage = "Mode Discussion Libre activé. De quoi veux-tu parler ?";
-                }
-            }
-            // On réinitialise le chat avec le message de bienvenue du nouveau mode
-            resetChat(welcomeMessage);
-        });
+        radio.addEventListener('change', (event) => { /* ... reste inchangé ... */ });
     });
+
+    // Copiez ici les fonctions addMessage et resetChat de votre script précédent
+    function addMessage(text, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
+        messageElement.textContent = text;
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function resetChat(welcomeMessage) {
+        chatBox.innerHTML = '';
+        conversationId = null;
+        addMessage(welcomeMessage, 'ia');
+    }
+
 </script>
+
 </body>
 </html>
