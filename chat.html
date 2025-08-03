@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Éducatif pour Enfants</title>
+    <style>
+        /* CSS pour un design simple et propre */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 500px;
+            height: 80vh;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #chat-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            line-height: 1.4;
+        }
+        .message.utilisateur {
+            background-color: #0084ff;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message.ia {
+            background-color: #e4e6eb;
+            color: #050505;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .message.typing {
+            color: #65676b;
+            font-style: italic;
+        }
+        #chat-form {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        #chat-input {
+            flex-grow: 1;
+            border: 1px solid #ccc;
+            border-radius: 18px;
+            padding: 10px 15px;
+            font-size: 16px;
+            outline: none;
+        }
+        #chat-input:focus {
+            border-color: #0084ff;
+        }
+        #chat-form button {
+            background-color: #0084ff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .header {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .header button {
+            padding: 8px 12px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #logout-btn {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <button id="new-chat-btn">Nouvelle Conversation</button>
+    <button id="logout-btn">Déconnexion</button>
+</div>
+<div id="chat-container">
+
+    <div class="modes-container">
+    <strong>Mode :</strong>
+    <input type="radio" id="mode-libre" name="chat-mode" value="libre" checked>
+    <label for="mode-libre">Libre</label>
+
+    <input type="radio" id="mode-dico" name="chat-mode" value="dictionnaire">
+    <label for="mode-dico">Dictionnaire</label>
+
+    <input type="radio" id="mode-trad" name="chat-mode" value="traduction">
+    <label for="mode-trad">Traduction</label>
+
+    <div id="translation-options" style="display: none; margin-top: 5px;">
+        <select id="source-lang">
+            <option value="Français">Français</option>
+            <option value="Anglais">Anglais</option>
+            <option value="Arabe">Arabe</option>
+        </select>
+        <span>vers</span>
+        <select id="target-lang">
+            <option value="Anglais">Anglais</option>
+            <option value="Français">Français</option>
+            <option value="Arabe">Arabe</option>
+        </select>
+    </div>
+</div>
+    
+<div id="chat-container">
+    <div id="chat-box">
+        <div class="message ia">Bonjour ! Je suis Tahani, ton tuteur IA. Pose-moi une question pour commencer.</div>
+    </div>
+    <form id="chat-form">
+        <input type="text" id="chat-input" placeholder="Écris ton message..." autocomplete="off" required>
+        <button type="submit">➤</button>
+    </form>
+</div>
+
+<script>
+    // --- CONSTANTES ET ÉLÉMENTS HTML ---
+    const API_URL = 'http://127.0.0.1:8000';
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatBox = document.getElementById('chat-box');
+    const newChatBtn = document.getElementById('new-chat-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const translationOptions = document.getElementById('translation-options');
+    const modeRadios = document.querySelectorAll('input[name="chat-mode"]');
+    let conversationId = null;
+
+    // --- VÉRIFICATION DE L'AUTHENTIFICATION ---
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+        alert('Vous devez être connecté pour accéder au chat.');
+        window.location.href = 'login.html';
+    }
+
+    // --- FONCTIONS UTILITAIRES ---
+    function addMessage(text, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
+        messageElement.textContent = text;
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // --- NOUVELLE FONCTION POUR RÉINITIALISER LE CHAT ---
+    function resetChat(welcomeMessage) {
+        chatBox.innerHTML = ''; // Vide la fenêtre de chat
+        conversationId = null;  // Réinitialise l'ID de la conversation
+        addMessage(welcomeMessage, 'ia'); // Affiche un message de bienvenue
+    }
+
+
+    // --- ÉCOUTEURS D'ÉVÉNEMENTS (LISTENERS) ---
+
+    // Listener principal pour l'envoi de message
+    chatForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const userMessage = chatInput.value.trim();
+        if (userMessage === '') return;
+
+        addMessage(userMessage, 'utilisateur');
+        chatInput.value = '';
+
+        const typingIndicator = document.createElement('div');
+        typingIndicator.classList.add('message', 'ia', 'typing');
+        typingIndicator.textContent = 'Léo est en train d\'écrire...';
+        chatBox.appendChild(typingIndicator);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            // Construction dynamique de la requête
+            const currentMode = document.querySelector('input[name="chat-mode"]:checked').value;
+            const requestBody = {
+                contenu: userMessage,
+                mode: currentMode
+            };
+
+            if (conversationId) {
+                requestBody.conversation_id = conversationId;
+            }
+
+            if (currentMode === 'traduction') {
+                requestBody.options = {
+                    source_lang: document.getElementById('source-lang').value,
+                    target_lang: document.getElementById('target-lang').value
+                };
+            }
+
+            // Envoi de la requête au backend
+            const response = await fetch(`${API_URL}/chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    alert('Votre session a expiré. Veuillez vous reconnecter.');
+                    window.location.href = 'login.html';
+                }
+                throw new Error(`Le serveur a répondu avec un statut ${response.status}`);
+            }
+
+            const data = await response.json();
+            conversationId = data.conversation_id;
+            
+            chatBox.removeChild(typingIndicator);
+            addMessage(data.contenu, 'ia');
+
+        } catch (error) {
+            console.error('Erreur:', error);
+            if(document.body.contains(typingIndicator)){
+                chatBox.removeChild(typingIndicator);
+            }
+            addMessage("Oups, une erreur est survenue lors de la connexion au serveur.", 'ia');
+        }
+    });
+
+    // Listener pour le bouton de déconnexion
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('accessToken');
+        alert('Vous avez été déconnecté.');
+        window.location.href = 'login.html';
+    });
+
+    // Listener pour le bouton de nouvelle conversation
+    newChatBtn.addEventListener('click', () => {
+        if (confirm('Voulez-vous vraiment commencer une nouvelle conversation ?')) {
+            resetChat('Bonjour ! Prêt pour une nouvelle discussion.');
+        }
+    });
+
+    // Listener pour les boutons radio des modes
+    modeRadios.forEach(radio => {
+        radio.addEventListener('change', (event) => {
+            const newMode = event.target.value;
+            let welcomeMessage = '';
+
+            if (newMode === 'traduction') {
+                translationOptions.style.display = 'inline-block';
+                welcomeMessage = "Mode Traduction activé. Quel texte veux-tu traduire ?";
+            } else {
+                translationOptions.style.display = 'none';
+                if (newMode === 'dictionnaire') {
+                    welcomeMessage = "Mode Dictionnaire activé. Quel mot veux-tu que je définisse ?";
+                } else {
+                    welcomeMessage = "Mode Discussion Libre activé. De quoi veux-tu parler ?";
+                }
+            }
+            // On réinitialise le chat avec le message de bienvenue du nouveau mode
+            resetChat(welcomeMessage);
+        });
+    });
+</script>
+</body>
+</html>

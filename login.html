@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; }
+        .form-container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 300px; }
+        h2 { text-align: center; color: #333; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #0084ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .link { text-align: center; margin-top: 15px; }
+        .error { color: red; text-align: center; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Connexion</h2>
+    <div id="error-message" class="error"></div>
+    <form id="login-form">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Mot de passe" required>
+        <button type="submit">Se connecter</button>
+    </form>
+    <div class="link">
+        <p>Pas de compte ? <a href="register.html">Inscrivez-vous</a></p>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://127.0.0.1:8000';
+    const form = document.getElementById('login-form');
+    const errorMessage = document.getElementById('error-message');
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        errorMessage.textContent = '';
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        // --- DÉBUT DE LA CORRECTION ---
+
+        // On crée un objet JavaScript simple
+        const loginData = {
+            email: email,
+            password: password
+        };
+
+        try {
+            const response = await fetch(`${API_URL}/connexion`, {
+                method: 'POST',
+                // On précise qu'on envoie du JSON
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                // On convertit notre objet en chaîne de caractères JSON
+                body: JSON.stringify(loginData)
+            });
+
+        // --- FIN DE LA CORRECTION ---
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('accessToken', data.access_token);
+                window.location.href = 'chat.html';
+            } else {
+                errorMessage.textContent = 'Email ou mot de passe incorrect.';
+            }
+        } catch (error) {
+            errorMessage.textContent = 'Erreur de connexion au serveur.';
+        }
+    });
+</script>
+
+</body>
+</html>
