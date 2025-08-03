@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Éducatif pour Enfants</title>
     <style>
-        /* ... tout votre CSS existant ... */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f0f2f5;
@@ -14,7 +13,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            flex-direction: column; /* Ajouté pour centrer les modes */
+            flex-direction: column;
         }
         .header {
             position: absolute;
@@ -44,7 +43,7 @@
         #chat-container {
             width: 100%;
             max-width: 500px;
-            height: 70vh; /* Un peu réduit pour faire de la place */
+            height: 70vh;
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -60,7 +59,7 @@
             flex-direction: column;
             gap: 12px;
         }
-        .message { padding: 10px 15px; border-radius: 18px; max-width: 75%; line-height: 1.4; }
+        .message { padding: 10px 15px; border-radius: 18px; max-width: 75%; line-height: 1.4; word-wrap: break-word; }
         .message.utilisateur { background-color: #0084ff; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
         .message.ia { background-color: #e4e6eb; color: #050505; align-self: flex-start; border-bottom-left-radius: 4px; }
         .message.typing { color: #65676b; font-style: italic; }
@@ -76,11 +75,16 @@
             margin-left: 10px;
             font-size: 20px;
             cursor: pointer;
-            flex-shrink: 0; /* Empêche le bouton de rétrécir */
+            flex-shrink: 0;
         }
         #send-btn { background-color: #0084ff; }
         #mic-btn { background-color: #6c757d; font-size: 18px; }
-        #mic-btn.is-listening { background-color: #dc3545; }
+        #mic-btn.is-listening { background-color: #dc3545; animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
     </style>
 </head>
 <body>
@@ -131,7 +135,7 @@
     // ===================================================================================
     // 1. CONSTANTES ET RÉFÉRENCES HTML
     // ===================================================================================
-    const API_URL = 'https://chat-educatif-backend.onrender.com';
+    const API_URL = 'https://ai-educ-backend.onrender.com';
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatBox = document.getElementById('chat-box');
@@ -169,13 +173,13 @@
     }
 
     function speak(text) {
+        // Annule la parole précédente pour éviter les superpositions
+        window.speechSynthesis.cancel(); 
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'fr-FR';
             utterance.rate = 1;
             window.speechSynthesis.speak(utterance);
-        } else {
-            console.log("Navigateur non compatible avec la synthèse vocale.");
         }
     }
 
@@ -222,7 +226,6 @@
     // 5. GESTION DES ÉVÉNEMENTS PRINCIPAUX
     // ===================================================================================
 
-    // Envoi d'un message via le formulaire
     chatForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const userMessage = chatInput.value.trim();
@@ -250,10 +253,7 @@
 
             const response = await fetch(`${API_URL}/chat`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify(requestBody),
             });
 
@@ -280,26 +280,22 @@
         }
     });
 
-    // Bouton de déconnexion
     logoutBtn.addEventListener('click', () => {
         localStorage.removeItem('accessToken');
         alert('Vous avez été déconnecté.');
         window.location.href = 'index.html';
     });
 
-    // Bouton pour une nouvelle conversation
     newChatBtn.addEventListener('click', () => {
         if (confirm('Voulez-vous vraiment commencer une nouvelle conversation ?')) {
             resetChat('Bonjour ! Prêt pour une nouvelle discussion.');
         }
     });
 
-    // Changement de mode
     modeRadios.forEach(radio => {
         radio.addEventListener('change', (event) => {
             const newMode = event.target.value;
             let welcomeMessage = '';
-
             if (newMode === 'traduction') {
                 translationOptions.style.display = 'inline-block';
                 welcomeMessage = "Mode Traduction activé. Quel texte veux-tu traduire ?";
