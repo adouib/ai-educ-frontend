@@ -128,8 +128,10 @@
 
 
 <script>
-    // --- CONSTANTES ET ÉLÉMENTS HTML ---
-    const API_URL = 'https://chat-educatif-backend.onrender.com'; // Assurez-vous que c'est bien votre URL
+    // ===================================================================================
+    // 1. CONSTANTES ET RÉFÉRENCES HTML
+    // ===================================================================================
+    const API_URL = 'https://chat-educatif-backend.onrender.com';
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatBox = document.getElementById('chat-box');
@@ -140,126 +142,18 @@
     const micBtn = document.getElementById('mic-btn');
     let conversationId = null;
 
-    // --- VÉRIFICATION DE L'AUTHENTIFICATION ---
+    // ===================================================================================
+    // 2. VÉRIFICATION DE L'AUTHENTIFICATION AU DÉMARRAGE
+    // ===================================================================================
     const token = localStorage.getItem('accessToken');
     if (!token) {
         alert('Vous devez être connecté pour accéder au chat.');
         window.location.href = 'index.html';
     }
 
-    // --- FONCTIONNALITÉ TEXT-TO-SPEECH (LA VOIX DE L'IA) ---
-    function speak(text) {
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'fr-FR'; // Assure une voix française
-            utterance.rate = 1; // Vitesse de parole
-            window.speechSynthesis.speak(utterance);
-        } else {
-            console.log("Désolé, votre navigateur ne supporte pas la synthèse vocale.");
-        }
-    }
-
-    // --- FONCTIONNALITÉ SPEECH-TO-TEXT (LA VOIX DE L'UTILISATEUR) ---
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition;
-
-    if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.lang = 'fr-FR';
-        recognition.interimResults = false;
-
-        micBtn.addEventListener('click', () => {
-            micBtn.classList.add('is-listening');
-            micBtn.textContent = '...';
-            recognition.start();
-        });
-
-        recognition.onresult = (event) => {
-            const speechResult = event.results[0][0].transcript;
-            chatInput.value = speechResult;
-            // Optionnel : envoyer automatiquement le message après la parole
-            chatForm.dispatchEvent(new Event('submit'));
-        };
-
-        recognition.onend = () => {
-            micBtn.classList.remove('is-listening');
-            micBtn.textContent = '🎤';
-        };
-
-        recognition.onerror = (event) => {
-            alert(`Erreur de reconnaissance vocale: ${event.error}`);
-            micBtn.classList.remove('is-listening');
-            micBtn.textContent = '🎤';
-        };
-
-    } else {
-        console.log("Désolé, votre navigateur ne supporte pas la reconnaissance vocale.");
-        micBtn.style.display = 'none'; // Cache le bouton si non supporté
-    }
-
-    // --- FONCTIONS UTILITAIRES ---
-    function addMessage(text, sender) { /* ... reste inchangée ... */ }
-    function resetChat(welcomeMessage) { /* ... reste inchangée ... */ }
-
-    // --- ÉCOUTEURS D'ÉVÉNEMENTS (LISTENERS) ---
-    chatForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const userMessage = chatInput.value.trim();
-        if (userMessage === '') return;
-        addMessage(userMessage, 'utilisateur');
-        chatInput.value = '';
-        const typingIndicator = document.createElement('div');
-        typingIndicator.classList.add('message', 'ia', 'typing');
-        typingIndicator.textContent = 'Léo est en train d\'écrire...';
-        chatBox.appendChild(typingIndicator);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        try {
-            const currentMode = document.querySelector('input[name="chat-mode"]:checked').value;
-            const requestBody = { contenu: userMessage, mode: currentMode };
-            if (conversationId) { requestBody.conversation_id = conversationId; }
-            if (currentMode === 'traduction') {
-                requestBody.options = {
-                    source_lang: document.getElementById('source-lang').value,
-                    target_lang: document.getElementById('target-lang').value
-                };
-            }
-            const response = await fetch(`${API_URL}/chat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(requestBody),
-            });
-            if (!response.ok) {
-                if (response.status === 401) {
-                    alert('Votre session a expiré. Veuillez vous reconnecter.');
-                    window.location.href = 'index.html';
-                }
-                throw new Error(`Le serveur a répondu avec un statut ${response.status}`);
-            }
-            const data = await response.json();
-            conversationId = data.conversation_id;
-            chatBox.removeChild(typingIndicator);
-            addMessage(data.contenu, 'ia');
-            // LIRE LA RÉPONSE DE L'IA À VOIX HAUTE
-            speak(data.contenu);
-        } catch (error) {
-            console.error('Erreur:', error);
-            if (document.body.contains(typingIndicator)) {
-                chatBox.removeChild(typingIndicator);
-            }
-            addMessage("Oups, une erreur est survenue lors de la connexion au serveur.", 'ia');
-        }
-    });
-
-    logoutBtn.addEventListener('click', () => { /* ... reste inchangé ... */ });
-    newChatBtn.addEventListener('click', () => { /* ... reste inchangé ... */ });
-    modeRadios.forEach(radio => {
-        radio.addEventListener('change', (event) => { /* ... reste inchangé ... */ });
-    });
-
-    // Copiez ici les fonctions addMessage et resetChat de votre script précédent
+    // ===================================================================================
+    // 3. FONCTIONS UTILITAIRES
+    // ===================================================================================
     function addMessage(text, sender) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', sender);
@@ -273,6 +167,153 @@
         conversationId = null;
         addMessage(welcomeMessage, 'ia');
     }
+
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'fr-FR';
+            utterance.rate = 1;
+            window.speechSynthesis.speak(utterance);
+        } else {
+            console.log("Navigateur non compatible avec la synthèse vocale.");
+        }
+    }
+
+    // ===================================================================================
+    // 4. CONFIGURATION DE LA RECONNAISSANCE VOCALE (SPEECH-TO-TEXT)
+    // ===================================================================================
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.interimResults = false;
+
+        micBtn.addEventListener('click', () => {
+            recognition.start();
+        });
+
+        recognition.onstart = () => {
+            micBtn.classList.add('is-listening');
+            micBtn.textContent = '...';
+        };
+
+        recognition.onresult = (event) => {
+            const speechResult = event.results[0][0].transcript;
+            chatInput.value = speechResult;
+            chatForm.dispatchEvent(new Event('submit'));
+        };
+
+        recognition.onend = () => {
+            micBtn.classList.remove('is-listening');
+            micBtn.textContent = '🎤';
+        };
+
+        recognition.onerror = (event) => {
+            alert(`Erreur de reconnaissance vocale: ${event.error}`);
+            micBtn.classList.remove('is-listening');
+            micBtn.textContent = '🎤';
+        };
+    } else {
+        console.log("Navigateur non compatible avec la reconnaissance vocale.");
+        micBtn.style.display = 'none';
+    }
+
+    // ===================================================================================
+    // 5. GESTION DES ÉVÉNEMENTS PRINCIPAUX
+    // ===================================================================================
+
+    // Envoi d'un message via le formulaire
+    chatForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const userMessage = chatInput.value.trim();
+        if (userMessage === '') return;
+
+        addMessage(userMessage, 'utilisateur');
+        chatInput.value = '';
+
+        const typingIndicator = document.createElement('div');
+        typingIndicator.classList.add('message', 'ia', 'typing');
+        typingIndicator.textContent = 'Léo est en train d\'écrire...';
+        chatBox.appendChild(typingIndicator);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            const currentMode = document.querySelector('input[name="chat-mode"]:checked').value;
+            const requestBody = { contenu: userMessage, mode: currentMode };
+            if (conversationId) { requestBody.conversation_id = conversationId; }
+            if (currentMode === 'traduction') {
+                requestBody.options = {
+                    source_lang: document.getElementById('source-lang').value,
+                    target_lang: document.getElementById('target-lang').value
+                };
+            }
+
+            const response = await fetch(`${API_URL}/chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    alert('Votre session a expiré. Veuillez vous reconnecter.');
+                    window.location.href = 'index.html';
+                }
+                throw new Error(`Le serveur a répondu avec un statut ${response.status}`);
+            }
+
+            const data = await response.json();
+            conversationId = data.conversation_id;
+            chatBox.removeChild(typingIndicator);
+            addMessage(data.contenu, 'ia');
+            speak(data.contenu);
+
+        } catch (error) {
+            console.error('Erreur:', error);
+            if (document.body.contains(typingIndicator)) {
+                chatBox.removeChild(typingIndicator);
+            }
+            addMessage("Oups, une erreur est survenue lors de la connexion au serveur.", 'ia');
+        }
+    });
+
+    // Bouton de déconnexion
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('accessToken');
+        alert('Vous avez été déconnecté.');
+        window.location.href = 'index.html';
+    });
+
+    // Bouton pour une nouvelle conversation
+    newChatBtn.addEventListener('click', () => {
+        if (confirm('Voulez-vous vraiment commencer une nouvelle conversation ?')) {
+            resetChat('Bonjour ! Prêt pour une nouvelle discussion.');
+        }
+    });
+
+    // Changement de mode
+    modeRadios.forEach(radio => {
+        radio.addEventListener('change', (event) => {
+            const newMode = event.target.value;
+            let welcomeMessage = '';
+
+            if (newMode === 'traduction') {
+                translationOptions.style.display = 'inline-block';
+                welcomeMessage = "Mode Traduction activé. Quel texte veux-tu traduire ?";
+            } else {
+                translationOptions.style.display = 'none';
+                if (newMode === 'dictionnaire') {
+                    welcomeMessage = "Mode Dictionnaire activé. Quel mot veux-tu que je définisse ?";
+                } else {
+                    welcomeMessage = "Mode Discussion Libre activé. De quoi veux-tu parler ?";
+                }
+            }
+            resetChat(welcomeMessage);
+        });
+    });
 
 </script>
 
