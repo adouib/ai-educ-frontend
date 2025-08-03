@@ -164,7 +164,7 @@
     const token = localStorage.getItem('accessToken');
     if (!token) {
         alert('Vous devez être connecté pour accéder au chat.');
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     }
 
     // --- FONCTIONS UTILITAIRES ---
@@ -233,7 +233,7 @@
             if (!response.ok) {
                 if (response.status === 401) {
                     alert('Votre session a expiré. Veuillez vous reconnecter.');
-                    window.location.href = 'login.html';
+                    window.location.href = 'index.html';
                 }
                 throw new Error(`Le serveur a répondu avec un statut ${response.status}`);
             }
@@ -257,7 +257,7 @@
     logoutBtn.addEventListener('click', () => {
         localStorage.removeItem('accessToken');
         alert('Vous avez été déconnecté.');
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     });
 
     // Listener pour le bouton de nouvelle conversation
